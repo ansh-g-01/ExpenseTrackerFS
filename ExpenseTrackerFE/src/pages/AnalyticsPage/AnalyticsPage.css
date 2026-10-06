@@ -1,0 +1,50 @@
+.analytics-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+}
+
+.view-toggle {
+    display: inline-flex;
+    padding: 4px;
+    background-color: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    box-shadow: var(--shadow);
+}
+
+.view-toggle button {
+    padding: 8px 18px;
+    color: var(--muted);
+    font-size: 14px;
+    font-weight: 600;
+    background: none;
+    border: none;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background-color 0.15s, color 0.15s;
+}
+
+.view-toggle button:hover {
+    color: var(--primary-dark);
+}
+
+.view-toggle button.active {
+    color: #ffffff;
+    background-image: linear-gradient(120deg, var(--primary), var(--accent));
+}
+
+.chart-card {
+    margin-top: 24px;
+    padding: 22px;
+    background-color: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+}
+
+.chart-card h3 {
+    margin: 0 0 14px;
+    font-size: 16px;
+}

@@ -1,0 +1,51 @@
+:root {
+    --primary: #4f46e5;
+    --primary-dark: #4338ca;
+    --accent: #7c3aed;
+    --text: #1e293b;
+    --muted: #64748b;
+    --border: #e2e8f0;
+    --surface: #ffffff;
+    --danger: #dc2626;
+    --success: #16a34a;
+    --radius: 14px;
+    --shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.06), 0 10px 24px -6px rgba(79, 70, 229, 0.12);
+
+    /* subtle dot grid, used as a background image */
+    --dots: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Ccircle cx='2' cy='2' r='1.2' fill='%234f46e5' fill-opacity='0.12'/%3E%3C/svg%3E");
+    /* soft diagonal lines, used on dark/gradient banners */
+    --stripes: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28'%3E%3Cpath d='M0 28L28 0' stroke='white' stroke-opacity='0.12' stroke-width='2'/%3E%3C/svg%3E");
+    --chevron: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    color: var(--text);
+    background-color: #f1f5f9;
+    background-image:
+        var(--dots),
+        radial-gradient(circle at 12% 8%, rgba(99, 102, 241, 0.18), transparent 38%),
+        radial-gradient(circle at 88% 92%, rgba(168, 85, 247, 0.16), transparent 40%);
+    background-attachment: fixed;
+}
+
+/* one look for every select, with a custom arrow that sits clear of the border */
+select {
+    appearance: none;
+    padding-right: 36px;
+    background-image: var(--chevron);
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    cursor: pointer;
+}
+
+input,
+select {
+    font-family: inherit;
+}

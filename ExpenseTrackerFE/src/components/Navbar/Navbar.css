@@ -1,0 +1,64 @@
+.navbar {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 14px 28px;
+    background-color: #312e81;
+    background-image: var(--stripes), linear-gradient(120deg, #312e81, #4f46e5 60%, #7c3aed);
+    box-shadow: 0 4px 16px rgba(49, 46, 129, 0.35);
+}
+
+.navbar-brand {
+    color: #ffffff;
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: 0.4px;
+}
+
+.navbar-brand::before {
+    content: "₹";
+    display: inline-grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    margin-right: 10px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    font-size: 16px;
+}
+
+.navbar-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.navbar-links a {
+    display: block;
+    padding: 8px 16px;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+    border-radius: 999px;
+    transition: background-color 0.15s, color 0.15s;
+}
+
+.navbar-links a:hover {
+    background-color: rgba(255, 255, 255, 0.15);
+    color: #ffffff;
+}
+
+.navbar-links a.active {
+    background-color: #ffffff;
+    color: var(--primary-dark);
+    font-weight: 600;
+}

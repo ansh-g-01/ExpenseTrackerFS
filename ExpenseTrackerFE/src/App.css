@@ -1,0 +1,53 @@
+.page {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 32px 20px 64px;
+}
+
+/* page title doubles as a banner: gradient + stripe pattern */
+.page > h2 {
+    margin: 0 0 24px;
+    padding: 28px 32px;
+    color: #ffffff;
+    font-size: 26px;
+    letter-spacing: 0.3px;
+    border-radius: var(--radius);
+    background-color: var(--primary);
+    background-image: var(--stripes), linear-gradient(120deg, var(--primary), var(--accent));
+    box-shadow: var(--shadow);
+}
+
+/* form/table/sort-bar carry their own outer margins; reset them inside a page */
+.page form {
+    max-width: none;
+    margin: 0 0 24px;
+}
+
+.page table {
+    margin: 16px 0 0;
+    max-width: none;
+}
+
+.page .sort-bar {
+    margin: 0;
+}
+
+.page .summary {
+    margin: 20px 0 8px;
+    color: var(--muted);
+}
+
+.page .summary strong {
+    color: var(--text);
+}
+
+@media (max-width: 600px) {
+    .page {
+        padding: 20px 14px 48px;
+    }
+
+    .page > h2 {
+        padding: 20px;
+        font-size: 22px;
+    }
+}

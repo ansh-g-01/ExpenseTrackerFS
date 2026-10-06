@@ -1,14 +1,14 @@
 import AddExpense from "../../components/AddExpense/AddExpense";
 import ExpenseList from "../../components/ExpenseList/ExpenseList";
-import { useExpenses } from "../../hooks/useExpenses";
+import { useExpenseList } from "../../hooks/useExpenseList";
 
 export default function AddExpensePage() {
-  const { expenses } = useExpenses();
+  const list = useExpenseList();
   return (
     <>
       <h2>Add Expense</h2>
       <AddExpense />
-      <ExpenseList expenses={expenses} />
+      <ExpenseList list={list} />
     </>
   );
 }

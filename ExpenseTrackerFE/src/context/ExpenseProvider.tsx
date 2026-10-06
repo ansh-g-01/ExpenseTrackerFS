@@ -1,37 +1,44 @@
+import { useState } from "react";
 import type { ReactNode } from "react";
 import { ExpenseContext } from "./expenseContext";
-import { useLocalStorage } from "../hooks/useLocalStorage";
-import { initialExpenses } from "../data/initialExpenses";
-import { DEFAULT_CATEGORIES } from "../constants/categories";
-import type { Expense } from "../types/expense";
+import { api } from "../api/client";
+import { useApiGet } from "../hooks/useApiGet";
+import type { Category, Expense, NewExpense } from "../types/expense";
 
 export function ExpenseProvider({ children }: { children: ReactNode }) {
-  const [expenses, setExpenses] = useLocalStorage<Expense[]>("expenses-demo-v2", initialExpenses);
-  const [categories, setCategories] = useLocalStorage<string[]>("categories", DEFAULT_CATEGORIES);
+  const [version, setVersion] = useState(0);
+  const categories = useApiGet<Category[]>("/categories", version);
+  const invalidate = () => setVersion((v) => v + 1);
 
-  const addExpense = (expense: Omit<Expense, "id">) => {
-    setExpenses([{ ...expense, id: crypto.randomUUID() }, ...expenses]);
+  const addExpense = async (expense: NewExpense) => {
+    const created = await api.post<Expense>("/expenses", expense);
+    invalidate(); // category counts change too
+    return created;
   };
 
-  const addCategory = (name: string) => {
-    const trimmed = name.trim();
-    if (!trimmed) return "Category name is required";
-    if (categories.some((c) => c.toLowerCase() === trimmed.toLowerCase())) {
-      return "Category already exists";
-    }
-    setCategories([...categories, trimmed]);
-    return null;
+  const addCategory = async (name: string) => {
+    const created = await api.post<Category>("/categories", { name });
+    invalidate();
+    return created;
   };
 
-  const deleteCategory = (name: string) => {
-    const inUse = expenses.filter((e) => e.category === name).length;
-    if (inUse > 0) return `"${name}" is used by ${inUse} expense${inUse === 1 ? "" : "s"} and can't be deleted`;
-    setCategories(categories.filter((c) => c !== name));
-    return null;
+  const deleteCategory = async (id: string) => {
+    await api.delete(`/categories/${encodeURIComponent(id)}`);
+    invalidate();
   };
 
   return (
-    <ExpenseContext.Provider value={{ expenses, categories, addExpense, addCategory, deleteCategory }}>
+    <ExpenseContext.Provider
+      value={{
+        categories: categories.data ?? [],
+        categoriesLoading: categories.loading && !categories.data,
+        categoriesError: categories.error,
+        version,
+        addExpense,
+        addCategory,
+        deleteCategory,
+      }}
+    >
       {children}
     </ExpenseContext.Provider>
   );

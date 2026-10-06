@@ -1,57 +1,40 @@
-import { useState } from "react";
-import type { Expense } from "../../types/expense";
+import type { ExpenseSort } from "../../types/expense";
+import { PAGE_SIZE, type ExpenseList as ExpenseListState } from "../../hooks/useExpenseList";
 import ExpenseItem from "./ExpenseItem";
 import Pagination from "../Pagination/Pagination";
 import "./ExpenseList.css";
 
-const PAGE_SIZE = 10;
+interface ExpenseListProps {
+  list: ExpenseListState;
+  emptyMessage?: string;
+}
 
-export default function ExpenseList({ expenses }: { expenses: Expense[] }) {
-  const [sortBy, setSortBy] = useState("date-desc");
-  const [requestedPage, setRequestedPage] = useState(1);
+export default function ExpenseList({ list, emptyMessage = "No expenses yet." }: ExpenseListProps) {
+  const { data, error, loading, sort, setSort, page, setPage } = list;
 
-  const sortedExpenses = [...expenses].sort((a, b) => {
-    switch (sortBy) {
-      case "date-asc":    return a.date.localeCompare(b.date);
-      case "date-desc":   return b.date.localeCompare(a.date);
-      case "amount-asc":  return a.amount - b.amount;
-      case "amount-desc": return b.amount - a.amount;
-      default:            return 0;
-    }
-  });
-
-  // clamp, so a filter that shrinks the list never leaves us on a page that no longer exists
-  const totalPages = Math.max(1, Math.ceil(sortedExpenses.length / PAGE_SIZE));
-  const page = Math.min(requestedPage, totalPages);
-  const pageExpenses = sortedExpenses.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  if (error) return <p className="error" role="alert">{error}</p>;
+  if (!data) return <p>Loading…</p>;
+  if (data.totalItems === 0) return <p>{emptyMessage}</p>;
 
   return (
-    <div>
+    <div aria-busy={loading} style={{ opacity: loading ? 0.6 : 1 }}>
       <div className="sort-bar">
         <label htmlFor="sort">Sort by</label>
-        <select id="sort" value={sortBy} onChange={(e) => {
-            setSortBy(e.target.value);
-            setRequestedPage(1);
-          }}>
-          <option value="date-desc">Date (newest first)</option>
-          <option value="date-asc">Date (oldest first)</option>
-          <option value="amount-desc">Amount (high to low)</option>
-          <option value="amount-asc">Amount (low to high)</option>
+        <select id="sort" value={sort} onChange={(e) => setSort(e.target.value as ExpenseSort)}>
+          <option value="date_desc">Date (newest first)</option>
+          <option value="date_asc">Date (oldest first)</option>
+          <option value="amount_desc">Amount (high to low)</option>
+          <option value="amount_asc">Amount (low to high)</option>
         </select>
       </div>
       <table>
         <tbody>
-          {pageExpenses.map((expense) => (
+          {data.items.map((expense) => (
             <ExpenseItem key={expense.id} expense={expense} />
           ))}
         </tbody>
       </table>
-      <Pagination
-        page={page}
-        pageSize={PAGE_SIZE}
-        totalItems={sortedExpenses.length}
-        onPageChange={setRequestedPage}
-      />
+      <Pagination page={page} pageSize={PAGE_SIZE} totalItems={data.totalItems} onPageChange={setPage} />
     </div>
   );
 }

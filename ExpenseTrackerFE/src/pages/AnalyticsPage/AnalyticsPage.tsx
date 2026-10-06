@@ -12,8 +12,10 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { withQuery } from "../../api/client";
+import { useApiGet } from "../../hooks/useApiGet";
 import { useExpenses } from "../../hooks/useExpenses";
-import { categoryTotals, dailyTotals, monthlyTotals, yearlyTotals } from "../../utils/analytics";
+import type { Analytics } from "../../types/expense";
 import { toMonthString } from "../../utils/date";
 import "./AnalyticsPage.css";
 
@@ -28,29 +30,20 @@ const VIEWS: { value: View; label: string }[] = [
 const COLORS = ["#2563eb", "#16a34a", "#f59e0b", "#dc2626", "#7c3aed", "#0891b2", "#db2777", "#65a30d"];
 
 export default function AnalyticsPage() {
-  const { expenses } = useExpenses();
+  const { version } = useExpenses();
   const now = new Date();
 
   const [view, setView] = useState<View>("monthly");
   const [month, setMonth] = useState(toMonthString(now));
   const [year, setYear] = useState(String(now.getFullYear()));
 
-  // Day wise -> one month, month wise -> one year, year wise -> everything
-  const periodExpenses = expenses.filter((e) => {
-    if (view === "daily") return e.date.startsWith(month);
-    if (view === "monthly") return e.date.startsWith(`${year}-`);
-    return true;
-  });
-
-  const timeData =
-    view === "daily" ? dailyTotals(expenses, month)
-    : view === "monthly" ? monthlyTotals(expenses, year)
-    : yearlyTotals(expenses);
-
-  const categoryData = categoryTotals(periodExpenses);
-  const total = periodExpenses.reduce((sum, e) => sum + e.amount, 0);
-
-  const periodLabel = view === "daily" ? month : view === "monthly" ? year : "all time";
+  // Day wise -> one month, month wise -> one year, year wise -> everything.
+  // Skip the request while the month/year input holds an incomplete value.
+  const path =
+    view === "daily" ? (/^\d{4}-\d{2}$/.test(month) ? withQuery("/analytics", { view, month }) : null)
+    : view === "monthly" ? (/^\d{4}$/.test(year) ? withQuery("/analytics", { view, year }) : null)
+    : withQuery("/analytics", { view });
+  const { data, error } = useApiGet<Analytics>(path, version);
 
   return (
     <>
@@ -85,13 +78,27 @@ export default function AnalyticsPage() {
         )}
       </div>
 
+      {path === null && <p>Enter a {view === "daily" ? "month" : "year"} to see spending.</p>}
+      {path !== null && error && <p className="error" role="alert">{error}</p>}
+      {path !== null && !error && !data && <p>Loading…</p>}
+      {path !== null && !error && data && <AnalyticsCharts data={data} viewLabel={VIEWS.find((v) => v.value === view)?.label} />}
+    </>
+  );
+}
+
+function AnalyticsCharts({ data, viewLabel }: { data: Analytics; viewLabel?: string }) {
+  const { total, count, timeSeries: timeData, byCategory: categoryData } = data;
+  const periodLabel = data.period.label;
+
+  return (
+    <>
       <p className="summary">
-        Total for {periodLabel}: <strong>{total}</strong> across {periodExpenses.length} expense
-        {periodExpenses.length === 1 ? "" : "s"}
+        Total for {periodLabel}: <strong>{total}</strong> across {count} expense
+        {count === 1 ? "" : "s"}
       </p>
 
       <section className="chart-card">
-        <h3>{VIEWS.find((v) => v.value === view)?.label} spending</h3>
+        <h3>{viewLabel} spending</h3>
         <ResponsiveContainer width="100%" height={300}>
           <BarChart data={timeData}>
             <CartesianGrid strokeDasharray="3 3" vertical={false} />
@@ -112,7 +119,7 @@ export default function AnalyticsPage() {
             <PieChart>
               <Pie isAnimationActive={false} data={categoryData} dataKey="total" nameKey="label" outerRadius={100}>
                 {categoryData.map((entry, i) => (
-                  <Cell key={entry.label} fill={COLORS[i % COLORS.length]} />
+                  <Cell key={entry.categoryId} fill={COLORS[i % COLORS.length]} />
                 ))}
               </Pie>
               <Tooltip />

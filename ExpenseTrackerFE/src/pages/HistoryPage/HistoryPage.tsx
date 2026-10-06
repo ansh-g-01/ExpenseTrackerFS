@@ -1,7 +1,8 @@
 import { useState } from "react";
 import ExpenseList from "../../components/ExpenseList/ExpenseList";
+import { useExpenseList } from "../../hooks/useExpenseList";
 import { useExpenses } from "../../hooks/useExpenses";
-import { WEEKDAY_LABELS, endOfMonth, parseISODate, startOfMonth, toISODate } from "../../utils/date";
+import { WEEKDAY_LABELS, endOfMonth, startOfMonth, toISODate } from "../../utils/date";
 
 type DateRange = readonly [Date, Date];
 
@@ -17,7 +18,7 @@ const toggle = <T,>(list: T[], item: T) =>
   list.includes(item) ? list.filter((x) => x !== item) : [...list, item];
 
 export default function HistoryPage() {
-  const { expenses, categories } = useExpenses();
+  const { categories } = useExpenses();
 
   const today = new Date();
   const defaultFrom = toISODate(startOfMonth(today));
@@ -30,19 +31,15 @@ export default function HistoryPage() {
   const [minAmount, setMinAmount] = useState("");
   const [maxAmount, setMaxAmount] = useState("");
 
-  const min = minAmount === "" ? -Infinity : Number(minAmount);
-  const max = maxAmount === "" ? Infinity : Number(maxAmount);
-
-  const filtered = expenses.filter(
-    (e) =>
-      (!from || e.date >= from) &&
-      (!to || e.date <= to) &&
-      !skipDays.includes(parseISODate(e.date).getDay()) &&
-      !skipCategories.includes(e.category) &&
-      e.amount >= min &&
-      e.amount <= max,
-  );
-  const total = filtered.reduce((sum, e) => sum + e.amount, 0);
+  // Filtering, totals and paging all happen on the server.
+  const list = useExpenseList({
+    from,
+    to,
+    minAmount,
+    maxAmount,
+    excludeCategoryIds: skipCategories,
+    excludeWeekdays: skipDays,
+  });
 
   const applyPreset = (range: (t: Date) => DateRange) => {
     const [start, end] = range(today);
@@ -107,13 +104,13 @@ export default function HistoryPage() {
         <fieldset>
           <legend>Skip categories</legend>
           {categories.map((category) => (
-            <label key={category} className="chip">
+            <label key={category.id} className="chip">
               <input
                 type="checkbox"
-                checked={skipCategories.includes(category)}
-                onChange={() => setSkipCategories(toggle(skipCategories, category))}
+                checked={skipCategories.includes(category.id)}
+                onChange={() => setSkipCategories(toggle(skipCategories, category.id))}
               />
-              {category}
+              {category.name}
             </label>
           ))}
         </fieldset>
@@ -121,11 +118,13 @@ export default function HistoryPage() {
         <button type="button" className="link-button" onClick={reset}>Reset filters</button>
       </section>
 
-      <p className="summary">
-        {filtered.length} expense{filtered.length === 1 ? "" : "s"} · Total <strong>{total}</strong>
-      </p>
+      {list.data && !list.error && (
+        <p className="summary">
+          {list.data.totalItems} expense{list.data.totalItems === 1 ? "" : "s"} · Total <strong>{list.data.totalAmount}</strong>
+        </p>
+      )}
 
-      {filtered.length === 0 ? <p>No expenses match these filters.</p> : <ExpenseList expenses={filtered} />}
+      <ExpenseList list={list} emptyMessage="No expenses match these filters." />
     </>
   );
 }

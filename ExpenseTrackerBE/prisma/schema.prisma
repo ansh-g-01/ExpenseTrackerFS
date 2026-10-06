@@ -1,0 +1,53 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id           String     @id @default(uuid())
+  name         String
+  email        String     @unique
+  // Null for the built-in local user, which can't log in.
+  passwordHash String?    @map("password_hash")
+  createdAt    DateTime   @default(now()) @map("created_at")
+  categories   Category[]
+  expenses     Expense[]
+
+  @@map("users")
+}
+
+model Category {
+  id        String    @id @default(uuid())
+  name      String
+  userId    String    @map("user_id")
+  createdAt DateTime  @default(now()) @map("created_at")
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expenses  Expense[]
+
+  // Case-insensitive uniqueness on (user_id, lower(name)) is enforced by a
+  // functional index added in the migration SQL (Prisma can't express it).
+  @@index([userId, createdAt])
+  @@map("categories")
+}
+
+model Expense {
+  id         String   @id @default(uuid())
+  name       String   @db.VarChar(100)
+  amount     Decimal  @db.Decimal(12, 2)
+  date       DateTime @db.Date
+  userId     String   @map("user_id")
+  categoryId String   @map("category_id")
+  createdAt  DateTime @default(now()) @map("created_at")
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+
+  @@index([date])
+  @@index([categoryId])
+  @@index([userId, date])
+  @@map("expenses")
+}
